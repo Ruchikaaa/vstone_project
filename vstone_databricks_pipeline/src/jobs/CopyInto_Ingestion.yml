@@ -1,0 +1,12 @@
+resources:
+  jobs:
+    Ingestion_CopyInto:
+      name: Ingestion_CopyInto
+      tasks:
+        - task_key: CopyInto_Ingestion_Job
+          notebook_task:
+            notebook_path: ../notebooks/02_Bronze_Ingestion/01_Bronze_Transactions_Ingestion.ipynb
+            source: WORKSPACE
+      queue:
+        enabled: true
+      performance_target: PERFORMANCE_OPTIMIZED

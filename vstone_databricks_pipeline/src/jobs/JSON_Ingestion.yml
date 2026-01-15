@@ -1,0 +1,12 @@
+resources:
+  jobs:
+    Ingest_JSON_Job:
+      name: Ingest_JSON_Job
+      tasks:
+        - task_key: JSON_Ingestion
+          notebook_task:
+            notebook_path: ../notebooks/02_Bronze_Ingestion/02_Bronze_JSON_Autoloader.ipynb
+            source: WORKSPACE
+      queue:
+        enabled: true
+      performance_target: PERFORMANCE_OPTIMIZED
