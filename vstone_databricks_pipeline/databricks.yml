@@ -5,20 +5,20 @@ bundle:
   uuid: 5ba810b1-a530-4ff4-94ce-77d2da209f6c
 
 include:
-  - resources/*.yml
-  - resources/*/*.yml
+  - src/jobs/*.yml
+  - src/jobs/*/*.yml
 
-artifacts:
-  python_artifact:
-    type: whl
-    build: uv build --wheel
+# artifacts:
+#   python_artifact:
+#     type: whl
+#     build: uv build --wheel
 
 # Variable declarations. These variables are assigned in the dev/prod targets below.
-variables:
-  catalog:
-    description: The catalog to use
-  schema:
-    description: The schema to use
+# variables:
+#   catalog:
+#     description: The catalog to use
+#   schema:
+#     description: The schema to use
 
 targets:
   dev:
@@ -29,19 +29,19 @@ targets:
     mode: development
     default: true
     workspace:
-      host: http://127.0.0.1:7073
-    variables:
-      catalog: vstone_project
-      schema: ${workspace.current_user.short_name}
-  prod:
-    mode: production
-    workspace:
-      host: http://127.0.0.1:7073
-      # We explicitly deploy to /Workspace/Users/ruchika.b.mhetre@v4c.ai to make sure we only have a single copy.
-      root_path: /Workspace/Users/ruchika.b.mhetre@v4c.ai/.bundle/${bundle.name}/${bundle.target}
-    variables:
-      catalog: vstone_project
-      schema: prod
-    permissions:
-      - user_name: ruchika.b.mhetre@v4c.ai
-        level: CAN_MANAGE
+      host: https://dbc-70d96654-a5b0.cloud.databricks.com/
+    # variables:
+    #   catalog: vstone_project
+    #   schema: ${workspace.current_user.short_name}
+  # prod:
+  #   mode: 
+  #   workspace:
+  #     host: http://127.0.0.1:7073
+  #     # We explicitly deploy to /Workspace/Users/ruchika.b.mhetre@v4c.ai to make sure we only have a single copy.
+  #     root_path: /Workspace/Users/ruchika.b.mhetre@v4c.ai/.bundle/${bundle.name}/${bundle.target}
+  #   variables:
+  #     catalog: vstone_project
+  #     schema: prod
+  #   permissions:
+  #     - user_name: ruchika.b.mhetre@v4c.ai
+  #       level: CAN_MANAGE

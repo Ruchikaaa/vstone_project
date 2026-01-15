@@ -1,0 +1,15 @@
+resources:
+  pipelines:
+    pipeline_csv_ingestion_dlt:
+      name: CSV Ingestion DLT
+      libraries:
+        - glob:
+            include: ../notebooks/02_Bronze_Ingestion/04_Bronze_DLT_CSV.ipynb
+      schema: db_project
+      continuous: false
+      development: false
+      photon: true
+      channel: CURRENT
+      catalog: vstone_project
+      serverless: true
+      root_path: /Workspace/Users/ruchika.b.mhetre@v4c.ai/vstone_project/vstone_databricks_pipeline/src/notebooks/02_Bronze_Ingestion
