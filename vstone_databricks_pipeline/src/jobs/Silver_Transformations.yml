@@ -1,10 +1,10 @@
 resources:
   pipelines:
-    pipeline_csv_ingestion_dlt:
-      name: CSV Ingestion DLT
+    pipeline_silver_transformations:
+      name: Silver Transformations
       libraries:
         - glob:
-            include: ../notebooks/02_Bronze_Ingestion/04_Bronze_DLT_CSV
+            include: ../notebooks/03_Silver_Transformations/01_Silver_Transformations
       schema: db_project
       continuous: false
       development: false
@@ -12,4 +12,4 @@ resources:
       channel: CURRENT
       catalog: vstone_project
       serverless: true
-      root_path: ../notebooks/02_Bronze_Ingestion
+      root_path: ../notebooks/03_Silver_Transformations
