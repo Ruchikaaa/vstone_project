@@ -5,25 +5,25 @@ resources:
       tasks:
         - task_key: CopyInto_Tests
           notebook_task:
-            notebook_path: /Workspace/Users/ruchika.b.mhetre@v4c.ai/vstone_project/vstone_databricks_pipeline/tests/01_Bronze_Tests/01_Bronze_Transactions_Ingestion_Tests
+            notebook_path: ../../tests/01_Bronze_Tests/01_Bronze_Transactions_Ingestion_Tests.ipynb
             source: WORKSPACE
         - task_key: JSON_Ingestion_Tests
           depends_on:
             - task_key: CopyInto_Tests
           notebook_task:
-            notebook_path: /Workspace/Users/ruchika.b.mhetre@v4c.ai/vstone_project/vstone_databricks_pipeline/tests/01_Bronze_Tests/02_Bronze_JSON_Ingestion_Tests
+            notebook_path: ../../tests/01_Bronze_Tests/02_Bronze_JSON_Ingestion_Tests.ipynb
             source: WORKSPACE
         - task_key: XML_Ingestion_Tests
           depends_on:
             - task_key: JSON_Ingestion_Tests
           notebook_task:
-            notebook_path: /Workspace/Users/ruchika.b.mhetre@v4c.ai/vstone_project/vstone_databricks_pipeline/tests/01_Bronze_Tests/03_Bronze_XML_Ingestion_Tests
+            notebook_path: ../../tests/01_Bronze_Tests/03_Bronze_XML_Ingestion_Tests.ipynb
             source: WORKSPACE
         - task_key: CSV_Ingestion_Tests
           depends_on:
             - task_key: XML_Ingestion_Tests
           notebook_task:
-            notebook_path: /Workspace/Users/ruchika.b.mhetre@v4c.ai/vstone_project/vstone_databricks_pipeline/tests/01_Bronze_Tests/04_Bronze_CSV_Ingestion_Tests
+            notebook_path: ../../tests/01_Bronze_Tests/04_Bronze_CSV_Ingestion_Tests.ipynb
             source: WORKSPACE
       queue:
         enabled: true
