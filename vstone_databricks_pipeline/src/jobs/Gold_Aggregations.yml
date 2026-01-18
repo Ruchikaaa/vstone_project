@@ -1,0 +1,14 @@
+resources:
+  pipelines:
+    pipeline_gold_aggregations:
+      name: Gold Aggregations
+      libraries:
+        - notebook:
+            path: ../notebooks/04_Gold_Layer/01_Gold_Aggregations.ipynb
+      schema: db_project
+      continuous: false
+      development: true
+      photon: true
+      channel: PREVIEW
+      catalog: vstone_project
+      serverless: true

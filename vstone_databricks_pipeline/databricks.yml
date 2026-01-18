@@ -45,3 +45,20 @@ targets:
   #   permissions:
   #     - user_name: ruchika.b.mhetre@v4c.ai
   #       level: CAN_MANAGE
+
+
+bundle:
+  name: vstone-databricks-pipeline
+
+targets:
+  dev:
+    workspace:
+      host: ${DATABRICKS_HOST}
+    resources:
+      jobs:
+        Data_Chunking:
+          name: Data Chunking
+          tasks:
+            - task_key: chunking_task
+              notebook_task:
+                notebook_path: ./src/notebooks/01_Chunking/data_chunking_logic.python
