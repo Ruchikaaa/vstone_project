@@ -1,0 +1,46 @@
+name: Databricks CI/CD
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    name: "Deploy and Test"
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the code from GitHub
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Install the Databricks CLI
+      - name: Setup Databricks CLI
+        uses: databricks/setup-cli@main
+
+      # 3. Validate the Asset Bundle (Checks databricks.yml for errors)
+      - name: Validate Bundle
+        run: databricks bundle validate
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+      # 4. Deploy to the 'dev' environment
+      - name: Deploy Bundle to Dev
+        if: github.ref == 'refs/heads/dev'
+        run: databricks bundle deploy -t dev
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+      # 5. Run Unit Tests (Optional but recommended for Day 10)
+      - name: Run Pipeline Tests
+        run: databricks bundle run test_job
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}

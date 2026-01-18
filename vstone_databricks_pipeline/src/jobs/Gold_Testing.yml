@@ -1,0 +1,12 @@
+resources:
+  jobs:
+    Gold_Tests:
+      name: Gold Tests
+      tasks:
+        - task_key: Gold_Tests
+          notebook_task:
+            notebook_path: ../../tests/03_Gold_Tests/01_Gold_Aggregations_Tests.ipynb
+            source: WORKSPACE
+      queue:
+        enabled: true
+      performance_target: PERFORMANCE_OPTIMIZED
