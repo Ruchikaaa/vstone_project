@@ -1,0 +1,51 @@
+name: Databricks Project CI/CD
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  deploy_and_test:
+    name: "Deploy and Test Pipeline"
+    runs-on: ubuntu-latest
+
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      # FIX 1: Force PAT authentication to bypass the 127.0.0.1 OAuth error
+      DATABRICKS_AUTH_TYPE: pat
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Databricks CLI
+        uses: databricks/setup-cli@main
+
+      # FIX 2: Use a single block to find the folder and validate/deploy
+      # This solves the "databricks.yml not found" error
+      - name: Validate and Deploy
+        run: |
+          # Find where the bundle file is hiding
+          BUNDLE_PATH=$(find . -name "databricks.yml" -exec dirname {} \;)
+          cd "$BUNDLE_PATH"
+          echo "Operating in: $(pwd)"
+          
+          # FIX 3: Use explicit flags to ensure the CLI uses the secrets, not local ports
+          databricks bundle validate -t dev --host "$DATABRICKS_HOST" --token "$DATABRICKS_TOKEN"
+          
+          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            databricks bundle deploy -t dev --host "$DATABRICKS_HOST" --token "$DATABRICKS_TOKEN"
+          fi
+
+      # FIX 4: Run the tests using the same directory logic
+      - name: Run Automated Test Job
+        run: |
+          BUNDLE_PATH=$(find . -name "databricks.yml" -exec dirname {} \;)
+          cd "$BUNDLE_PATH"
+          databricks bundle run vstone_test_runner -t dev --host "$DATABRICKS_HOST" --token "$DATABRICKS_TOKEN"
