@@ -14,30 +14,38 @@ jobs:
     name: "Deploy and Test Pipeline"
     runs-on: ubuntu-latest
 
-    # Set common environment variables for all steps to avoid repetition
     env:
       DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      # ADDITION 1: Force the CLI to use the Personal Access Token mode
+      DATABRICKS_AUTH_TYPE: pat 
 
     steps:
-      # 1. Check out the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Install Databricks CLI (Using the official setup action for reliability)
       - name: Setup Databricks CLI
         uses: databricks/setup-cli@main
 
-      # 3. Validate the Asset Bundle (Infrastructure Check)
-      - name: Validate Bundle
-        run: databricks bundle validate -t dev
+      # ADDITION 2: Dynamic Path Discovery
+      # This ensures the CLI finds databricks.yml even if it is in a subfolder
+      - name: Validate and Deploy
+        run: |
+          BUNDLE_PATH=$(find . -name "databricks.yml" -exec dirname {} \;)
+          cd "$BUNDLE_PATH"
+          echo "Operating in: $(pwd)"
+          
+          # Validate infrastructure
+          databricks bundle validate -t dev
+          
+          # Conditional Deployment
+          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            databricks bundle deploy -t dev
+          fi
 
-      # 4. Conditional Deployment (Only deploys if the push is to the 'dev' branch)
-      - name: Deploy Bundle to Dev
-        if: github.ref == 'refs/heads/dev'
-        run: databricks bundle deploy -t dev
-
-      # 5. Run Automated Test Orchestrator
-      # This calls your 'Master Runner' which executes all 6 test notebooks
+      # ADDITION 3: Targeted Test Execution
       - name: Run Automated Test Job
-        run: databricks bundle run vstone_test_runner
+        run: |
+          BUNDLE_PATH=$(find . -name "databricks.yml" -exec dirname {} \;)
+          cd "$BUNDLE_PATH"
+          databricks bundle run vstone_test_runner -t dev
