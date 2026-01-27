@@ -18,9 +18,11 @@ jobs:
       - name: Setup Databricks CLI
         uses: databricks/setup-cli@main
 
+      - name: List files for debugging
+        run: ls -R
+
       - name: Deploy Bundle
         run: databricks bundle deploy
-        working-directory: ./vstone_project
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
