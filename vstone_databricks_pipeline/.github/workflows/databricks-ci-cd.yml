@@ -1,4 +1,4 @@
-name: Databricks CI/CD
+name: Databricks Project CI/CD
 
 on:
   push:
@@ -10,37 +10,34 @@ on:
       - dev
 
 jobs:
-  deploy:
-    name: "Deploy and Test"
+  deploy_and_test:
+    name: "Deploy and Test Pipeline"
     runs-on: ubuntu-latest
 
+    # Set common environment variables for all steps to avoid repetition
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
     steps:
-      # 1. Check out the code from GitHub
+      # 1. Check out the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Install the Databricks CLI
+      # 2. Install Databricks CLI (Using the official setup action for reliability)
       - name: Setup Databricks CLI
         uses: databricks/setup-cli@main
 
-      # 3. Validate the Asset Bundle (Checks databricks.yml for errors)
+      # 3. Validate the Asset Bundle (Infrastructure Check)
       - name: Validate Bundle
-        run: databricks bundle validate
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: databricks bundle validate -t dev
 
-      # 4. Deploy to the 'dev' environment
+      # 4. Conditional Deployment (Only deploys if the push is to the 'dev' branch)
       - name: Deploy Bundle to Dev
         if: github.ref == 'refs/heads/dev'
         run: databricks bundle deploy -t dev
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
-      # 5. Run Unit Tests (Optional but recommended for Day 10)
-      - name: Run Pipeline Tests
-        run: databricks bundle run test_job
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      # 5. Run Automated Test Orchestrator
+      # This calls your 'Master Runner' which executes all 6 test notebooks
+      - name: Run Automated Test Job
+        run: databricks bundle run vstone_test_runner
