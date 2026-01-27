@@ -22,7 +22,9 @@ jobs:
         run: ls -R
 
       - name: Deploy Bundle
-        run: databricks bundle deploy
+        run: |
+          cd vstone_project
+          databricks bundle deploy
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
