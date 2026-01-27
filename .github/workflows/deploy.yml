@@ -23,7 +23,14 @@ jobs:
 
       - name: Deploy Bundle
         run: |
-          cd vstone_project
+          # 1. Find where databricks.yml actually is
+          BUNDLE_PATH=$(find . -name "databricks.yml" -exec dirname {} \;)
+          
+          # 2. Move to that directory
+          cd "$BUNDLE_PATH"
+          echo "Deploying from directory: $(pwd)"
+          
+          # 3. Run the deploy
           databricks bundle deploy
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
