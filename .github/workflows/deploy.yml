@@ -20,6 +20,7 @@ jobs:
 
       - name: Deploy Bundle
         run: databricks bundle deploy
+        working-directory: ./vstone_project
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
