@@ -23,28 +23,25 @@ jobs:
       DATABRICKS_AUTH_TYPE: pat 
 
     steps:
-      - name: Checkout code
+      # 1. Copy your code onto the GitHub server
+      - name: Checkout Code
         uses: actions/checkout@v3
 
+      # 2. Install the Databricks CLI tools
       - name: Setup Databricks CLI
         uses: databricks/setup-cli@main
 
-      # ADDITION 2: Dynamic Path Discovery
-      # This ensures the CLI finds databricks.yml even if it is in a subfolder
-      - name: Validate and Deploy
+      # 3. Find the databricks.yml and Deploy
+      - name: Deploy Asset Bundle
         run: |
+          # Find the folder containing your databricks.yml
           BUNDLE_PATH=$(find . -name "databricks.yml" -exec dirname {} \;)
           cd "$BUNDLE_PATH"
-          echo "Operating in: $(pwd)"
           
-          # Validate infrastructure
+          # Validate and Deploy
           databricks bundle validate -t dev
+          databricks bundle deploy -t dev
           
-          # Conditional Deployment
-          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
-            databricks bundle deploy -t dev
-          fi
-
       # ADDITION 3: Targeted Test Execution
       - name: Run Automated Test Job
         run: |
