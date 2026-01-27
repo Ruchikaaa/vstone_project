@@ -3,45 +3,87 @@
 bundle:
   name: vstone_databricks_pipeline
   uuid: 5ba810b1-a530-4ff4-94ce-77d2da209f6c
-
-include:
-  - resources/*.yml
-  - resources/*/*.yml
-
-artifacts:
-  python_artifact:
-    type: whl
-    build: uv build --wheel
-
-# Variable declarations. These variables are assigned in the dev/prod targets below.
-variables:
-  catalog:
-    description: The catalog to use
-  schema:
-    description: The schema to use
-
 targets:
   dev:
-    # The default target uses 'mode: development' to create a development copy.
-    # - Deployed resources get prefixed with '[dev my_user_name]'
-    # - Any job schedules and triggers are paused by default.
-    # See also https://docs.databricks.com/dev-tools/bundles/deployment-modes.html.
     mode: development
     default: true
     workspace:
-      host: http://127.0.0.1:7073
-    variables:
+      host: https://dbc-70d96654-a5b0.cloud.databricks.com/
+resources:
+  # --- Part 1: Delta Live Tables Pipeline (Bronze Ingestion) ---
+  pipelines:
+    vstone_bronze_pipeline:
+      name: vstone_bronze_ingestion
+      serverless: true
       catalog: vstone_project
-      schema: ${workspace.current_user.short_name}
-  prod:
-    mode: production
-    workspace:
-      host: http://127.0.0.1:7073
-      # We explicitly deploy to /Workspace/Users/ruchika.b.mhetre@v4c.ai to make sure we only have a single copy.
-      root_path: /Workspace/Users/ruchika.b.mhetre@v4c.ai/.bundle/${bundle.name}/${bundle.target}
-    variables:
-      catalog: vstone_project
-      schema: prod
-    permissions:
-      - user_name: ruchika.b.mhetre@v4c.ai
-        level: CAN_MANAGE
+      libraries:
+        - notebook:
+            path: ./src/notebooks/02_Bronze_Ingestion/04_Bronze_DLT_CSV.ipynb
+      configuration:
+        pipeline.volume_path: "/Volumes/vstone_project/db_project/raw_data/"
+      target: dev_catalog_vstone 
+
+  # --- Part 2: Jobs (Orchestration & Testing) ---
+  jobs:
+    # 1. Automated Test Runner (Used by GitHub Actions/Method 2)
+    vstone_test_runner:
+      name: "[Automated] Pipeline Test Runner"
+      parameters:
+        - name: "catalog"
+          default: "vstone_project"
+        - name: "schema"
+          default: "db_project"
+        - name: "volume_path"
+          default: "/Volumes/vstone_project/db_project/raw_data"
+      tasks:
+        - task_key: run_all_tests
+          notebook_task:
+            notebook_path: ./tests/Automated_Test_Runner.ipynb
+
+    # 2. Main End-to-End Pipeline (Mandate 1 & 2 Orchestration)
+    vstone_e2e_car_pipeline:
+      name: "[Individual] End-to-End Car Sales Pipeline"
+      tasks:
+        # Step A: Ingest
+        - task_key: bronze_ingestion
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.vstone_bronze_pipeline.id}
+
+        # Step B: Quality Gate (Parallel Testing)
+        - task_key: 01_Bronze_Transactions_Ingestion_Tests
+          depends_on: [{ task_key: bronze_ingestion }]
+          notebook_task:
+            notebook_path: ./tests/01_Bronze_Tests/01_Bronze_Transactions_Ingestion_Tests.ipynb
+        
+        - task_key: 02_Bronze_JSON_Ingestion_Tests
+          depends_on: [{ task_key: bronze_ingestion }]
+          notebook_task:
+            notebook_path: ./tests/01_Bronze_Tests/02_Bronze_JSON_Ingestion_Tests.ipynb
+            
+        - task_key: 03_Bronze_XML_Ingestion_Tests
+          depends_on: [{ task_key: bronze_ingestion }]
+          notebook_task:
+            notebook_path: ./tests/01_Bronze_Tests/03_Bronze_XML_Ingestion_Tests.ipynb
+            
+        - task_key: 04_Bronze_CSV_Ingestion_Tests
+          depends_on: [{ task_key: bronze_ingestion }]
+          notebook_task:
+            notebook_path: ./tests/01_Bronze_Tests/04_Bronze_CSV_Ingestion_Tests.ipynb
+
+        # Step C: Transform (Silver)
+        - task_key: silver_layer
+          depends_on: 
+            - task_key: 01_Bronze_Transactions_Ingestion_Tests
+            - task_key: 02_Bronze_JSON_Ingestion_Tests
+            - task_key: 03_Bronze_XML_Ingestion_Tests
+            - task_key: 04_Bronze_CSV_Ingestion_Tests
+          notebook_task:
+            notebook_path: ./src/notebooks/03_Silver_Transformations/01_Silver_Transformations.ipynb
+
+        # Step D: Model (Gold - Star Schema)
+        - task_key: gold_layer
+          depends_on: [{ task_key: silver_layer }]
+          notebook_task:
+            notebook_path: ./src/notebooks/04_Gold_Layer/01_Gold_Aggregations.ipynb
+
+      
