@@ -28,16 +28,16 @@ jobs:
           cd "$BUNDLE_PATH"
           echo "Deploying from: $(pwd)"
 
-          # 2. Manually create a default config to skip SCIM/OAuth checks
-          mkdir -p ~/.databrickscfg
+          # 2. Force clean-up and create the config FILE (not a directory)
+          rm -rf ~/.databrickscfg
           echo "[DEFAULT]" > ~/.databrickscfg
-          echo "host = ${DATABRICKS_HOST}" >> ~/.databrickscfg
-          echo "token = ${DATABRICKS_TOKEN}" >> ~/.databrickscfg
+          echo "host = ${{ secrets.DATABRICKS_HOST }}" >> ~/.databrickscfg
+          echo "token = ${{ secrets.DATABRICKS_TOKEN }}" >> ~/.databrickscfg
+          chmod 600 ~/.databrickscfg
 
           # 3. Force deployment using the PAT auth type
           databricks bundle deploy --target dev
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-          # THIS IS THE CRITICAL LINE:
           DATABRICKS_AUTH_TYPE: pat
