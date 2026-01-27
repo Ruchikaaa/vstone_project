@@ -23,13 +23,21 @@ jobs:
 
       - name: Deploy Bundle
         run: |
-          # 1. Find the bundle directory
+          # 1. Locate the bundle root dynamically
           BUNDLE_PATH=$(find . -name "databricks.yml" -exec dirname {} \;)
           cd "$BUNDLE_PATH"
           echo "Deploying from: $(pwd)"
 
-          # 2. Run deploy with explicit host and token flags to bypass profile errors
+          # 2. Manually create a default config to skip SCIM/OAuth checks
+          mkdir -p ~/.databrickscfg
+          echo "[DEFAULT]" > ~/.databrickscfg
+          echo "host = ${DATABRICKS_HOST}" >> ~/.databrickscfg
+          echo "token = ${DATABRICKS_TOKEN}" >> ~/.databrickscfg
+
+          # 3. Force deployment using the PAT auth type
           databricks bundle deploy --target dev
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          # THIS IS THE CRITICAL LINE:
+          DATABRICKS_AUTH_TYPE: pat
