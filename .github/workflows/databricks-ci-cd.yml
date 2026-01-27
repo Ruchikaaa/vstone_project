@@ -32,13 +32,19 @@ jobs:
       # 3. Find the databricks.yml and Deploy
       - name: Deploy Asset Bundle
         run: |
-          # Find the folder containing your databricks.yml
+          # 1. Locate the bundle root
           BUNDLE_PATH=$(find . -name "databricks.yml" -exec dirname {} \;)
           cd "$BUNDLE_PATH"
-          
-          # Validate and Deploy
-          databricks bundle validate -t dev
-          databricks bundle deploy -t dev
+          echo "Operating in: $(pwd)"
+
+          # 2. Force the CLI to ignore local profiles and use secrets directly
+          # We use --host and --token flags to override any local loopback defaults
+          databricks bundle deploy \
+            -t dev \
+            --host "${{ secrets.DATABRICKS_HOST }}" \
+            --token "${{ secrets.DATABRICKS_TOKEN }}"
+        env:
+          DATABRICKS_AUTH_TYPE: pat
           
       # ADDITION 3: Targeted Test Execution
       - name: Run Automated Test Job
